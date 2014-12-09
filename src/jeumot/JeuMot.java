@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -15,10 +16,56 @@ public class JeuMot {
      public static final int BONNE_LETTRE = 0;
      public static final int MAUVAISE_LETTRE = 1;
      
+     public static final int JOUER = 0;
+     public static final int RENOMMER = 1;
+     public static final int QUITTER = 2;
+     public static final int CROIX_ROUGE = -1;
+     
     public static void main(String[] args) {
        String[] motOriginaux = new String[]{"chat","chien","maison"};
        String[] indices = new String[]{"Animal","Animal","Logis"};
-       int[] compteurLettres = new int[2];
+       String nomJoueur = "Joueur";
+       int boutonPresse = 0;
+       while(boutonPresse != CROIX_ROUGE && boutonPresse != QUITTER){
+           boutonPresse = afficherMenu(nomJoueur);
+           switch(boutonPresse){
+               case JOUER :
+                   jouer(motOriginaux,indices);
+                   break;
+               case RENOMMER :
+                   String nom = renommer();
+                   if(nom != null){
+                       nomJoueur = nom;
+                   }
+           }
+       }
+    }
+    
+    private static String renommer(){
+        String nouveauNom = "";
+        boolean cancel = false;
+        do{
+            nouveauNom = JOptionPane.showInputDialog(null, "Veuillez écrire votre nom : ", "Renommer", JOptionPane.QUESTION_MESSAGE);
+            
+            if(nouveauNom == null){
+              cancel = true;
+              nouveauNom = "c";
+            }
+            
+            if(nouveauNom.isEmpty()){
+                JOptionPane.showMessageDialog(null, "Vous devez écrire quelque chose, un nom vide n'est pas accepté.", "Nom vide", JOptionPane.WARNING_MESSAGE);
+            }
+            
+        }while(!cancel && nouveauNom.isEmpty());
+        return cancel?null:nouveauNom;
+    }
+    
+     private static int afficherMenu(String nomJoueur) {
+        return JOptionPane.showOptionDialog(null, "Bienvenue sur le menu de JeuMot! \nVotre nom est : " + nomJoueur, "JeuMot" , JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[]{"Jouer","Renommer","Quitter"}, 0);
+    }
+    
+    private static void jouer(String[] motOriginaux, String[] indices){
+        int[] compteurLettres = new int[2];
        int chances = 3;
        boolean perdu = false;
        int i = 0;
