@@ -1,10 +1,5 @@
 package jeumot;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -69,55 +64,44 @@ public class JeuMot {
        int chances = 3;
        boolean perdu = false;
        int i = 0;
-       while(chances != 0 && i < motOriginaux.length){
+       while(!perdu && i < motOriginaux.length){
            boolean motTrouve = false;
            int nombreLettres = motOriginaux[i].length();
-           afficherMot(indices[i],nombreLettres);
            while(!motTrouve && !perdu){
-               String ligne = lireReponse();
-               int nombreLettresReponse = ligne.length();
-               if(nombreLettresReponse != nombreLettres){
-                   System.out.println("Le mot n'est pas de la même longueur.");
-                   System.out.println("Vous avez perdu une chance.");
-                   chances--;
-               }
-               else {
-                   if(verifierReponse(ligne,motOriginaux[i],compteurLettres)){
-                       System.out.println("Bravo, vous avez trouver le mot!");
-                       motTrouve = true;
-                       chances = 3;
-                       i++;
-                   } else{
-                       System.out.println("Le mot " + ligne + " n'est pas le bon mot. Vous avez pourtant marqué " + compteurLettres[BONNE_LETTRE] + (compteurLettres[BONNE_LETTRE] > 2?" bonnes letrres":" bonne lettre")
-                        + " et " + compteurLettres[MAUVAISE_LETTRE] + (compteurLettres[MAUVAISE_LETTRE] > 2?" mauvaises lettres.":" mauvaise lettre."));
-                       System.out.println("Vous avez perdu une chance.");
-                       chances--;
-                   }
-               }
-               
-               if(chances == 0){
+               String ligne = afficherMot(indices[i],nombreLettres);
+               if(ligne == null){
                    perdu = true;
-                   System.out.println("Vous avez perdu la partie! Le bon mot était " + motOriginaux[i] + ".");
-               }
-               
-               if(!motTrouve && !perdu){
-                   System.out.println("Il vous reste " + chances + (chances > 2? " chances.":" chance."));
-                   System.out.print("Réessayer : ");
-               }
-               reinitialisation(compteurLettres);
+               } else {
+                int nombreLettresReponse = ligne.length();
+                if(nombreLettresReponse != nombreLettres){
+                    JOptionPane.showMessageDialog(null, "Le mot n'est pas de la même longueur.\n" + "Vous avez perdu une chance." , "Mots de différente longueur", JOptionPane.WARNING_MESSAGE);
+                    chances--;
+                }
+                else {
+                    if(verifierReponse(ligne,motOriginaux[i],compteurLettres)){
+                        JOptionPane.showMessageDialog(null, "Bravo, vous avez trouvé le mot!", "Bravo", JOptionPane.INFORMATION_MESSAGE);
+                        motTrouve = true;
+                        chances = 3;
+                        i++;
+                    } else{
+                        JOptionPane.showMessageDialog(null, "Le mot " + ligne + " n'est pas le bon mot. Vous avez pourtant marqué " + compteurLettres[BONNE_LETTRE] + (compteurLettres[BONNE_LETTRE] > 2?" bonnes letrres":" bonne lettre")
+                         + " et " + compteurLettres[MAUVAISE_LETTRE] + (compteurLettres[MAUVAISE_LETTRE] > 2?" mauvaises lettres.":" mauvaise lettre.") + "\nVous avez perdu une chance.", "Mauvaise réponse", JOptionPane.WARNING_MESSAGE);
+                        chances--;
+                    }
+                }
+
+                if(chances == 0){
+                    perdu = true;
+                    JOptionPane.showMessageDialog(null,"Vous avez perdu la partie! Le bon mot était " + motOriginaux[i] + ".","Partie perdu",JOptionPane.ERROR_MESSAGE);
+                }
+
+                if(!motTrouve && !perdu){
+                    JOptionPane.showMessageDialog(null,"Il vous reste " + chances + (chances > 2? " chances.":" chance."),"Nombre de chances restantes",JOptionPane.WARNING_MESSAGE);
+                }
+                reinitialisation(compteurLettres);
+            }
            }
        }
-    }
-
-    private static String lireReponse() {
-         try {
-             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-             String ligne = br.readLine();
-             return ligne.toLowerCase();
-         } catch (IOException ex) {
-             Logger.getLogger(JeuMot.class.getName()).log(Level.SEVERE, null, ex);
-         }
-        return "";
     }
 
     private static void reinitialisation(int[] compteurLettres) {
@@ -125,9 +109,8 @@ public class JeuMot {
         compteurLettres[MAUVAISE_LETTRE] = 0;
     }
 
-    private static void afficherMot(String indice, int nombreLettres) {
-        System.out.println("==> Vous devez chercher un mot de " + nombreLettres + (nombreLettres > 2? " lettres.":" lettre."));
-        System.out.println("INDICE : " + indice);
+    private static String afficherMot(String indice, int nombreLettres) {
+        return JOptionPane.showInputDialog(null, "Vous devez chercher un mot de " + nombreLettres + (nombreLettres > 2? " lettres.":" lettre.") + "\nINDICE : " + indice, "Cherchez un mot", JOptionPane.QUESTION_MESSAGE);
     }
 
     private static boolean verifierReponse(String ligne, String motOriginaux, int[] compteurLettres) {
