@@ -1,5 +1,9 @@
 package jeumot;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Random;
 import javax.swing.JOptionPane;
 
 /**
@@ -11,21 +15,28 @@ public class JeuMot {
      public static final int BONNE_LETTRE = 0;
      public static final int MAUVAISE_LETTRE = 1;
      
+     public static final int MOTS_LU = 0;
+     public static final int INDICES_LU = 1;
+     
      public static final int JOUER = 0;
      public static final int RENOMMER = 1;
      public static final int QUITTER = 2;
      public static final int CROIX_ROUGE = -1;
      
+     public static final int CHANCES_DEFAULT = 3;
+     
     public static void main(String[] args) {
-       String[] motOriginaux = new String[]{"chat","chien","maison"};
-       String[] indices = new String[]{"Animal","Animal","Logis"};
+       Random random = new Random();
+       String[] motsLus = lireMotsEtIndices();
+       String[] motOriginaux = recupererContenu(motsLus,MOTS_LU);
+       String[] indices = recupererContenu(motsLus,INDICES_LU);
        String nomJoueur = "Joueur";
        int boutonPresse = 0;
        while(boutonPresse != CROIX_ROUGE && boutonPresse != QUITTER){
            boutonPresse = afficherMenu(nomJoueur);
            switch(boutonPresse){
                case JOUER :
-                   jouer(motOriginaux,indices);
+                   jouer(motOriginaux,indices,random);
                    break;
                case RENOMMER :
                    String nom = renommer();
@@ -34,6 +45,29 @@ public class JeuMot {
                    }
            }
        }
+    }
+    
+    private static String[] lireMotsEtIndices(){
+        String[] tabMotsIndices = null;
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("Mots.txt"));
+            String ligne = br.readLine();
+            tabMotsIndices = ligne.split(",");
+        }catch(IOException ex){
+            System.out.println(ex);
+        }
+        return tabMotsIndices;
+    }
+    
+    private static String[] recupererContenu(String[] motsLus, int typeDonnee){
+        String[] contenu = new String[motsLus.length];
+        for(int i = 0; i < motsLus.length;i++){
+            if(!motsLus[i].isEmpty()){
+                String[] motEtIndice = motsLus[i].split(":");
+                contenu[i] = motEtIndice[typeDonnee];
+            }
+        }
+        return contenu;
     }
     
     private static String renommer(){
@@ -59,16 +93,18 @@ public class JeuMot {
         return JOptionPane.showOptionDialog(null, "Bienvenue sur le menu de JeuMot! \nVotre nom est : " + nomJoueur, "JeuMot" , JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[]{"Jouer","Renommer","Quitter"}, 0);
     }
     
-    private static void jouer(String[] motOriginaux, String[] indices){
+    private static void jouer(String[] motOriginaux, String[] indices,Random random){
         int[] compteurLettres = new int[2];
-       int chances = 3;
+       int chances = CHANCES_DEFAULT;
        boolean perdu = false;
-       int i = 0;
-       while(!perdu && i < motOriginaux.length){
+       int motsRestants = motOriginaux.length;
+       boolean[] motChoisiPrecedent = new boolean[motsRestants];
+       while(!perdu && motsRestants > 0){
            boolean motTrouve = false;
-           int nombreLettres = motOriginaux[i].length();
+           int motChoisi = choisirMotHasard(motOriginaux, motChoisiPrecedent, random);
+           int nombreLettres = motOriginaux[motChoisi].length();
            while(!motTrouve && !perdu){
-               String ligne = afficherMot(indices[i],nombreLettres);
+               String ligne = afficherMot(indices[motChoisi],nombreLettres);
                if(ligne == null){
                    perdu = true;
                } else {
@@ -78,11 +114,11 @@ public class JeuMot {
                     chances--;
                 }
                 else {
-                    if(verifierReponse(ligne,motOriginaux[i],compteurLettres)){
+                    if(verifierReponse(ligne,motOriginaux[motChoisi],compteurLettres)){
                         JOptionPane.showMessageDialog(null, "Bravo, vous avez trouvé le mot!", "Bravo", JOptionPane.INFORMATION_MESSAGE);
                         motTrouve = true;
                         chances = 3;
-                        i++;
+                        motsRestants--;
                     } else{
                         JOptionPane.showMessageDialog(null, "Le mot " + ligne + " n'est pas le bon mot. Vous avez pourtant marqué " + compteurLettres[BONNE_LETTRE] + (compteurLettres[BONNE_LETTRE] > 2?" bonnes letrres":" bonne lettre")
                          + " et " + compteurLettres[MAUVAISE_LETTRE] + (compteurLettres[MAUVAISE_LETTRE] > 2?" mauvaises lettres.":" mauvaise lettre.") + "\nVous avez perdu une chance.", "Mauvaise réponse", JOptionPane.WARNING_MESSAGE);
@@ -92,7 +128,7 @@ public class JeuMot {
 
                 if(chances == 0){
                     perdu = true;
-                    JOptionPane.showMessageDialog(null,"Vous avez perdu la partie! Le bon mot était " + motOriginaux[i] + ".","Partie perdu",JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null,"Vous avez perdu la partie! Le bon mot était " + motOriginaux[motChoisi] + ".","Partie perdu",JOptionPane.ERROR_MESSAGE);
                 }
 
                 if(!motTrouve && !perdu){
@@ -102,6 +138,20 @@ public class JeuMot {
             }
            }
        }
+    }
+    
+    private static int choisirMotHasard(String[] motsOriginaux,boolean[] motChoisiPrecedent, Random random){
+        int motChoisi = 0;
+        boolean choixFait = false;
+        
+        while(!choixFait){
+            motChoisi = random.nextInt(motsOriginaux.length);
+            if(!motChoisiPrecedent[motChoisi]){
+                motChoisiPrecedent[motChoisi] = true;
+                choixFait = true;
+            }
+        }
+        return motChoisi;
     }
 
     private static void reinitialisation(int[] compteurLettres) {
